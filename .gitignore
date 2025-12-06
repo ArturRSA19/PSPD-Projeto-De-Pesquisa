@@ -1,0 +1,40 @@
+# Node
+node_modules/
+**/node_modules/
+*.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.build/
+.eggs/
+.env
+.venv
+venv/
+
+# Go
+bin/
+**/bin/
+*.exe
+*.test
+coverage.out
+
+# General
+.DS_Store
+.idea/
+.vscode/
+.tmp/
+*.swp
+
+# Proto generated
+service-a-python/users_pb2*.py
+service-b-go/pspd/
+
+# Kubernetes
+*.orig
+
+# Reports / perf artifacts
+scripts/results/

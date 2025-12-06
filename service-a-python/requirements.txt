@@ -1,0 +1,4 @@
+grpcio==1.75.1
+protobuf==6.31.1
+# Para regenerar stubs localmente (não necessário em runtime):
+# grpcio-tools==1.75.1

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>PSPD gRPC Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 1.2rem; background:#f7f9fb; }
+    h1 { font-size: 1.4rem; }
+    section { background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom:1rem; }
+    code { background:#eee; padding:2px 4px; border-radius:4px; }
+    #log { white-space: pre-wrap; background:#111; color:#0f0; padding:0.75rem; height:220px; overflow:auto; font-size:0.75rem; border-radius:6px; }
+    button { cursor:pointer; padding:0.45rem 0.9rem; border-radius:5px; border:1px solid #1d6; background:#1d6; color:#fff; font-weight:600; }
+    button.secondary { background:#555; border-color:#555; }
+    input, textarea { padding:0.4rem 0.5rem; border:1px solid #ccc; border-radius:4px; width:100%; box-sizing:border-box; }
+    .row { display:flex; gap:0.5rem; }
+    .row > div { flex:1; }
+    footer { margin-top:2rem; font-size:0.7rem; color:#666; text-align:center; }
+    table { width:100%; border-collapse: collapse; font-size:0.75rem; }
+    th, td { border:1px solid #ddd; padding:4px 6px; text-align:left; }
+    th { background:#f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>Frontend Web - Gateway gRPC</h1>
+  <p>Interface mínima para acionar endpoints expostos pelo Gateway (HTTP → gRPC) e demonstrar chat bidirecional.</p>
+
+  <section>
+    <h2>Usuário (Unary)</h2>
+    <div class="row">
+      <div>
+        <label>ID do usuário:</label>
+        <input id="userId" value="1" />
+      </div>
+      <div style="align-self:flex-end;">
+        <button onclick="getUser()">GetUser</button>
+      </div>
+    </div>
+    <pre id="userResult"></pre>
+  </section>
+
+  <section>
+    <h2>Lista de Usuários (Server Streaming agregado)</h2>
+    <button onclick="listUsers()">/users</button>
+    <pre id="listResult"></pre>
+  </section>
+
+  <section>
+    <h2>Bulk Create (Client Streaming)</h2>
+    <textarea id="bulkJson" rows="4">{"users":[{"id":"10","name":"Eva","age":22},{"id":"11","name":"Frank","age":35}]}</textarea>
+    <button onclick="bulkCreate()">Enviar</button>
+    <pre id="bulkResult"></pre>
+  </section>
+
+  <section>
+    <h2>Score (Unary Stats Service)</h2>
+    <div class="row">
+      <div><label>User ID:</label><input id="scoreUserId" value="1"/></div>
+      <div style="align-self:flex-end;"><button onclick="getScore()">GetScore</button></div>
+    </div>
+    <pre id="scoreResult"></pre>
+  </section>
+
+  <section>
+    <h2>Chat Bidirecional (WebSocket ↔ gRPC)</h2>
+    <div class="row">
+      <div><label>User ID:</label><input id="chatUser" value="u1"/></div>
+      <div style="align-self:flex-end;"><button onclick="connectChat()" id="chatBtn">Conectar</button></div>
+    </div>
+    <div class="row">
+      <div><input id="chatMsg" placeholder="Mensagem"/></div>
+      <div style="align-self:flex-end;"><button class="secondary" onclick="sendChat()">Enviar</button></div>
+    </div>
+    <div id="log"></div>
+  </section>
+
+  <section>
+    <h2>Referências Rápidas</h2>
+    <table>
+      <thead><tr><th>Endpoint</th><th>Método</th><th>Descrição</th></tr></thead>
+      <tbody>
+        <tr><td>/users/:id</td><td>GET</td><td>Unary GetUser</td></tr>
+        <tr><td>/users</td><td>GET</td><td>Server streaming agregado</td></tr>
+        <tr><td>/users/bulk</td><td>POST</td><td>Client streaming (JSON→stream→resumo)</td></tr>
+        <tr><td>/scores/:userId</td><td>GET</td><td>Unary GetScore (Stats)</td></tr>
+        <tr><td>/chat</td><td>WS</td><td>Bidirectional streaming (UserChat)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>PSPD gRPC Demo – Frontend mínimo para requisitos de interface web.</footer>
+
+<script>
+const base = location.origin;
+function pretty(target, data){ document.getElementById(target).textContent = JSON.stringify(data,null,2); }
+async function getUser(){
+  const id = userId.value.trim();
+  const r = await fetch(`${base}/users/${id}`); pretty('userResult', await r.json());
+}
+async function listUsers(){
+  const r = await fetch(`${base}/users`); pretty('listResult', await r.json());
+}
+async function bulkCreate(){
+  try {
+    const obj = JSON.parse(bulkJson.value);
+    const r = await fetch(`${base}/users/bulk`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(obj)});
+    pretty('bulkResult', await r.json());
+  } catch(e){ bulkResult.textContent = 'JSON inválido: '+ e.message; }
+}
+async function getScore(){
+  const id = scoreUserId.value.trim();
+  const r = await fetch(`${base}/scores/${id}`); pretty('scoreResult', await r.json());
+}
+let ws;
+function connectChat(){
+  if(ws && ws.readyState===WebSocket.OPEN){ ws.close(); return; }
+  ws = new WebSocket((location.protocol==='https:'?'wss':'ws')+'://'+location.host+'/chat');
+  ws.onopen = ()=>{ chatBtn.textContent='Desconectar';  logLine('[WS] conectado'); };
+  ws.onclose = ()=>{ chatBtn.textContent='Conectar'; logLine('[WS] fechado'); };
+  ws.onmessage = ev => { logLine('<= '+ev.data); };
+}
+function sendChat(){
+  if(!ws || ws.readyState!==WebSocket.OPEN){ return logLine('[ERRO] WS não conectado'); }
+  const payload = {user_id: chatUser.value.trim()||'u1', text: chatMsg.value.trim()};
+  ws.send(JSON.stringify(payload));
+  logLine('=> '+JSON.stringify(payload));
+  chatMsg.value='';
+}
+function logLine(t){ const el = document.getElementById('log'); el.textContent += t+'\n'; el.scrollTop = el.scrollHeight; }
+</script>
+</body>
+</html>
