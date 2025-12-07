@@ -66,45 +66,31 @@ A pesquisa utiliza uma aplicação distribuída baseada nos módulos colaborativ
 - **Limite Testado**: 200 usuários simultâneos (0% erros, latência degradada)
 - **Recomendação**: HPA CPU 50%, 2-5 réplicas para produção
 
-Análise completa disponível em [`docs/RESULTADOS_COMPARATIVOS.md`](docs/RESULTADOS_COMPARATIVOS.md)
-
 ## Estrutura do Projeto de Pesquisa
 
 ```
 📁 PSPD-Projeto-De-Pesquisa/
-├── 📄 RELATORIO.md                    # Relatório principal da pesquisa
-├── 📄 STATUS.md                       # Progresso e comandos úteis
-├── 📄 README.md                       # Visão geral do projeto
+├── 📄 README.md                       # Visão geral do projeto de pesquisa
+├── 📄 Relatorio.md                    # Relatório principal da pesquisa
 │
-├── 📁 docs/                           # Documentação da pesquisa
-│   ├── CLUSTER_SETUP.md               # Setup do cluster K8s multi-node
-│   ├── PROMETHEUS_SETUP.md            # Configuração de observabilidade
-│   ├── LOAD_TESTING.md                # Metodologia de testes de carga
-│   ├── RESULTADOS_COMPARATIVOS.md     # Análise completa dos cenários
-│   └── CENARIOS_TESTE.md              # Definição dos cenários
+├── 📁 Assets/                         # Screenshots e evidências visuais
 │
 ├── 📁 k8s/                            # Manifests Kubernetes
-│   ├── namespace.yaml                 # Namespace pspd-lab
-│   ├── *-deployment.yaml              # Deployments dos serviços
-│   ├── *-service.yaml                 # Services
-│   ├── hpa.yaml                       # Horizontal Pod Autoscaler
-│   ├── servicemonitors.yaml           # ServiceMonitors Prometheus
-│   └── ingress.yaml                   # Ingress Controller
 │
 ├── 📁 scripts/                        # Automações da pesquisa
-│   ├── setup_cluster.sh               # Setup completo do cluster
-│   ├── setup_prometheus.sh            # Instalação do Prometheus
-│   ├── build_and_load_images.sh       # Build e load de imagens
-│   ├── deploy.sh                      # Deploy da aplicação
-│   ├── run_load_test.sh               # Execução dos testes de carga
-│   ├── load-test.js                   # Script k6 para cenários 1-3
-│   ├── load-test-stress.js            # Script k6 para stress test
-│   └── expose_gateway.sh              # Exposição local do gateway
 │
-├── 📁 gateway-node/                   # Módulo P (Gateway)
-├── 📁 service-a-python/               # Módulo A (gRPC Users)
-├── 📁 service-b-go/                   # Módulo B (gRPC Stats)
-└── 📁 proto/                          # Contratos gRPC
+├── 📁 gateway-node/                   # Módulo P (Gateway HTTP → gRPC)
+│
+├── 📁 service-a-python/               # Módulo A (gRPC Users Python)
+│
+├── 📁 service-b-go/                   # Módulo B (gRPC Stats Go)
+│
+├── 📁 proto/                          # Contratos gRPC
+│
+└── 📁 rest-version/                   # Versão alternativa REST
+    ├── README.md                      # Documentação REST
+    ├── service-a-rest/                # Service A em REST (Python)
+    └── service-b-rest/                # Service B em REST (Go)
 ```
 
 ## Reprodução da Pesquisa
@@ -196,15 +182,8 @@ cd gateway-node && npm start
 
 ## Documentação da Pesquisa
 
-### Arquivos Principais
+### Arquivo Principal
 - **[`RELATORIO.md`](RELATORIO.md)**: Relatório completo da pesquisa
-- **[`docs/RESULTADOS_COMPARATIVOS.md`](docs/RESULTADOS_COMPARATIVOS.md)**: Análise detalhada dos cenários
-- **[`STATUS.md`](STATUS.md)**: Status atual e comandos úteis
-
-### Guias de Setup
-- **[`docs/CLUSTER_SETUP.md`](docs/CLUSTER_SETUP.md)**: Configuração do cluster
-- **[`docs/PROMETHEUS_SETUP.md`](docs/PROMETHEUS_SETUP.md)**: Setup de observabilidade  
-- **[`docs/LOAD_TESTING.md`](docs/LOAD_TESTING.md)**: Metodologia de testes
 
 ### Scripts de Automação
 - **Setup**: `setup_cluster.sh`, `setup_prometheus.sh`
@@ -246,7 +225,6 @@ cd gateway-node && npm start
 
 ### Recursos do Projeto
 - **Repositório**: GitHub - PSPD-Projeto-De-Pesquisa
-- **Documentação**: Diretório [`docs/`](docs/)
 - **Scripts**: Diretório [`scripts/`](scripts/)
 - **Manifests K8s**: Diretório [`k8s/`](k8s/)
 
