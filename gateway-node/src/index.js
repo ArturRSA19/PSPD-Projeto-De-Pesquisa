@@ -5,9 +5,36 @@ import protoLoader from '@grpc/proto-loader';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { WebSocketServer } from 'ws';
+import client from 'prom-client';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Prometheus metrics setup
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+// Custom metrics
+const httpRequestDuration = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'Duration of HTTP requests in seconds',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [register]
+});
+
+const grpcRequestDuration = new client.Histogram({
+  name: 'grpc_request_duration_seconds',
+  help: 'Duration of gRPC requests in seconds',
+  labelNames: ['service', 'method', 'status'],
+  registers: [register]
+});
+
+const httpRequestsTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code'],
+  registers: [register]
+});
 
 const PROTO_PATH = path.join(__dirname, '../proto/users.proto');
 const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
@@ -125,6 +152,12 @@ wss.on('connection', (ws) => {
     console.log('[WS] conexão fechada');
     try { grpcStream.end(); } catch {}
   });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 // Página simples opcional

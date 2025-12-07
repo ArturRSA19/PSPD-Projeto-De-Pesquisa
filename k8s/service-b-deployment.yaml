@@ -16,9 +16,12 @@ spec:
       containers:
         - name: service-b
           image: service-b:local
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 50052
+              name: grpc
+            - containerPort: 9090
+              name: metrics
           readinessProbe:
             tcpSocket:
               port: 50052

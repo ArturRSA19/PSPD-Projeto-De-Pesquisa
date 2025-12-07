@@ -16,7 +16,7 @@ spec:
       containers:
         - name: gateway
           image: gateway:local
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           env:
             - name: USER_SERVICE_ADDR
               value: service-a:50051
@@ -24,6 +24,9 @@ spec:
               value: service-b:50052
           ports:
             - containerPort: 8080
+              name: http
+            - containerPort: 9090
+              name: metrics
           readinessProbe:
             httpGet:
               path: /healthz

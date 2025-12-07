@@ -4,6 +4,12 @@ from concurrent import futures
 import grpc
 import users_pb2
 import users_pb2_grpc
+from prometheus_client import start_http_server, Counter, Histogram
+import threading
+
+# Prometheus metrics
+REQUEST_COUNT = Counter('grpc_requests_total', 'Total gRPC requests', ['method', 'status'])
+REQUEST_DURATION = Histogram('grpc_request_duration_seconds', 'gRPC request duration', ['method'])
 
 # In-memory store
 USERS = {
@@ -13,12 +19,15 @@ USERS = {
 
 class UserService(users_pb2_grpc.UserServiceServicer):
     def GetUser(self, request, context):
-        user = USERS.get(request.id)
-        if not user:
-            context.set_code(grpc.StatusCode.NOT_FOUND)
-            context.set_details('User not found')
-            return users_pb2.UserResponse()
-        return users_pb2.UserResponse(user=users_pb2.User(**user))
+        with REQUEST_DURATION.labels(method='GetUser').time():
+            user = USERS.get(request.id)
+            if not user:
+                REQUEST_COUNT.labels(method='GetUser', status='NOT_FOUND').inc()
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                context.set_details('User not found')
+                return users_pb2.UserResponse()
+            REQUEST_COUNT.labels(method='GetUser', status='OK').inc()
+            return users_pb2.UserResponse(user=users_pb2.User(**user))
 
     def ListUsers(self, request, context):
         for u in USERS.values():
@@ -41,6 +50,11 @@ class UserService(users_pb2_grpc.UserServiceServicer):
 
 
 def serve():
+    # Start Prometheus metrics server
+    metrics_port = int(os.environ.get("METRICS_PORT", "9090"))
+    start_http_server(metrics_port)
+    print(f'Metrics server running on :{metrics_port}')
+    
     port = os.environ.get("USER_PORT", "50051")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     users_pb2_grpc.add_UserServiceServicer_to_server(UserService(), server)

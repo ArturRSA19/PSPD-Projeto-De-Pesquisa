@@ -1,0 +1,51 @@
+---
+# ServiceMonitor para o Gateway
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: gateway-metrics
+  namespace: pspd-lab
+  labels:
+    app: gateway
+spec:
+  selector:
+    matchLabels:
+      app: gateway
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /metrics
+---
+# ServiceMonitor para Service A
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: service-a-metrics
+  namespace: pspd-lab
+  labels:
+    app: service-a
+spec:
+  selector:
+    matchLabels:
+      app: service-a
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /metrics
+---
+# ServiceMonitor para Service B
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: service-b-metrics
+  namespace: pspd-lab
+  labels:
+    app: service-b
+spec:
+  selector:
+    matchLabels:
+      app: service-b
+  endpoints:
+    - port: metrics
+      interval: 15s
+      path: /metrics
