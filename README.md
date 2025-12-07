@@ -1,5 +1,7 @@
 # Projeto de Pesquisa PSPD - Monitoramento e Observabilidade em Clusters Kubernetes
 
+## Link para vídeo-apresentação: https://www.youtube.com/watch?v=ZVK_BzLbAzM
+
 ## Integrantes
 - **Artur Rodrigues Sousa Alves** - 211043638
 - **Guilherme Soares Rocha** - 211039789  
