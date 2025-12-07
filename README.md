@@ -1,51 +1,26 @@
-# Projeto PSPD - gRPC + Kubernetes (Minikube)
+# Projeto de Pesquisa PSPD - Monitoramento e Observabilidade em Clusters Kubernetes
 
 ## Integrantes
-- Pedro Augusto Izarias
-- Artur Rodrigues
-- Guilherme Soares
+- **Artur Rodrigues Sousa Alves** - 211043638
+- **Guilherme Soares Rocha** - 211039789  
+- **Pedro Augusto Dourado Izarias** - 200062620
 
-## Visão Geral
-- P (Gateway / API HTTP + Cliente gRPC): Node.js (Express)
-- A (gRPC Server - domínio Usuários): Python
-- B (gRPC Server - domínio Estatísticas/Score): Go
+## Objetivo do Projeto de Pesquisa
+Este projeto explora **estratégias de monitoramento e observabilidade** de aplicações baseadas em microserviços em ambiente Kubernetes, com foco em métricas de desempenho. O objetivo é compreender como aplicações containerizadas se adaptam a diferentes demandas de uso através de mecanismos de elasticidade e autoscaling.
 
-Cada padrão de comunicação gRPC será demonstrado:
-1. Unary: GetUser / GetScore
-2. Server Streaming: ListUsers
-3. Client Streaming: CreateUsers (bulk)
-4. Bidirectional Streaming: Chat (canal broadcast simples entre clientes via gateway) / StreamScores (exemplo de streaming bidirecional entre gateway e serviço B)
+## Aplicação Base - Arquitetura gRPC
+A pesquisa utiliza uma aplicação distribuída baseada nos módulos colaborativos P-A-B:
 
-## Estrutura de Pastas
-```
-proto/                # Definições .proto
-gateway-node/         # Código do Gateway (P)
-service-a-python/     # Serviço A (gRPC Users) - Python
-service-b-go/         # Serviço B (gRPC Stats) - Go
-k8s/                  # Manifests Kubernetes
-scripts/              # Scripts de teste e performance
-rest-version/         # Versão alternativa REST entre P, A e B
-```
+- **P (Gateway/WEB API)**: Node.js + Express + Cliente gRPC
+- **A (Serviço de Usuários)**: Python gRPC Server  
+- **B (Serviço de Estatísticas)**: Go gRPC Server
 
-## Passos Sugeridos de Execução (Desenvolvimento Local)
-1. Instalar dependências de cada serviço.
-2. Gerar stubs a partir de `proto/users.proto`:
-   - Python:
-     ```bash
-     cd service-a-python
-     python -m grpc_tools.protoc -I ../proto --python_out=. --grpc_python_out=. ../proto/users.proto
-     ```
-   - Go:
-     ```bash
-     cd service-b-go
-     protoc -I ../proto --go_out=. --go-grpc_out=. ../proto/users.proto
-     ```
-   - Node.js usa carregamento dinâmico via `@grpc/proto-loader` (não precisa gerar).
-3. Rodar serviços A e B.
-4. Rodar gateway.
-5. Testar endpoints HTTP expostos pelo gateway.
+### Fluxo de Requisições
+1. **Entrada**: Requisições HTTP chegam ao módulo P (Gateway)
+2. **Processamento**: Interação colaborativa entre P → A e P → B via gRPC
+3. **Consolidação**: Resultado final baseado na combinação das interações gRPC
 
-## Padrões gRPC Implementados
+### Padrões gRPC Implementados
 | Padrão | Método | Serviço | Descrição |
 |--------|--------|---------|-----------|
 | Unary | GetUser | UserService (A) | Retorna um usuário pelo ID |
@@ -55,99 +30,224 @@ rest-version/         # Versão alternativa REST entre P, A e B
 | Unary | GetScore | StatsService (B) | Calcula/retorna score de um usuário |
 | Bidirectional Streaming | StreamScores | StatsService (B) | Cálculo incremental de métricas |
 
-## Tutorial Rápido de Execução
+## Infraestrutura de Pesquisa
 
-### Execução Local (gRPC)
+### Cluster Kubernetes Multi-Node
+- **Topologia**: 1 nó control-plane + 2 worker nodes (Minikube)
+- **Interface Web**: Dashboard Kubernetes habilitado
+- **Autoscaling**: HPA (Horizontal Pod Autoscaler) configurado
+- **Métricas**: Metrics Server habilitado
 
-1. **Script único para iniciar todos os serviços:**
+### Stack de Monitoramento e Observabilidade
+- **Prometheus**: Coleta de métricas personalizadas e do sistema
+- **Grafana**: Visualização de dashboards e alertas
+- **ServiceMonitors**: Configuração automática de targets
+- **Métricas Expostas**:
+  - HTTP: `http_requests_total`, `http_request_duration_seconds`
+  - gRPC: `grpc_requests_total`, `grpc_request_duration_seconds`
+  - Sistema: CPU, Memória, Network, Pods, Réplicas
+
+### Ferramenta de Teste de Carga
+- **k6**: Ferramenta escolhida para stress testing
+- **Cenários**: 4 cenários comparativos de performance
+- **Métricas Avaliadas**: Latência, Throughput, Escalabilidade, Uso de recursos
+
+## Metodologia de Pesquisa
+
+### Cenários de Teste Implementados
+1. **Baseline (HPA Normal)**: Configuração base com autoscaling padrão
+2. **Pré-escalado**: Comparação com réplicas fixas vs autoscaling
+3. **HPA Agressivo**: Thresholds mais baixos para escalamento rápido
+4. **Stress Test**: Identificação de limites máximos do sistema
+
+### Resultados da Pesquisa
+- **Performance Ótima**: HPA Normal (111 req/s, 432ms P95)
+- **Descoberta**: Autoscaling superou pré-escalamento fixo
+- **Limite Testado**: 200 usuários simultâneos (0% erros, latência degradada)
+- **Recomendação**: HPA CPU 50%, 2-5 réplicas para produção
+
+Análise completa disponível em [`docs/RESULTADOS_COMPARATIVOS.md`](docs/RESULTADOS_COMPARATIVOS.md)
+
+## Estrutura do Projeto de Pesquisa
+
+```
+📁 PSPD-Projeto-De-Pesquisa/
+├── 📄 RELATORIO.md                    # Relatório principal da pesquisa
+├── 📄 STATUS.md                       # Progresso e comandos úteis
+├── 📄 README.md                       # Visão geral do projeto
+│
+├── 📁 docs/                           # Documentação da pesquisa
+│   ├── CLUSTER_SETUP.md               # Setup do cluster K8s multi-node
+│   ├── PROMETHEUS_SETUP.md            # Configuração de observabilidade
+│   ├── LOAD_TESTING.md                # Metodologia de testes de carga
+│   ├── RESULTADOS_COMPARATIVOS.md     # Análise completa dos cenários
+│   └── CENARIOS_TESTE.md              # Definição dos cenários
+│
+├── 📁 k8s/                            # Manifests Kubernetes
+│   ├── namespace.yaml                 # Namespace pspd-lab
+│   ├── *-deployment.yaml              # Deployments dos serviços
+│   ├── *-service.yaml                 # Services
+│   ├── hpa.yaml                       # Horizontal Pod Autoscaler
+│   ├── servicemonitors.yaml           # ServiceMonitors Prometheus
+│   └── ingress.yaml                   # Ingress Controller
+│
+├── 📁 scripts/                        # Automações da pesquisa
+│   ├── setup_cluster.sh               # Setup completo do cluster
+│   ├── setup_prometheus.sh            # Instalação do Prometheus
+│   ├── build_and_load_images.sh       # Build e load de imagens
+│   ├── deploy.sh                      # Deploy da aplicação
+│   ├── run_load_test.sh               # Execução dos testes de carga
+│   ├── load-test.js                   # Script k6 para cenários 1-3
+│   ├── load-test-stress.js            # Script k6 para stress test
+│   └── expose_gateway.sh              # Exposição local do gateway
+│
+├── 📁 gateway-node/                   # Módulo P (Gateway)
+├── 📁 service-a-python/               # Módulo A (gRPC Users)
+├── 📁 service-b-go/                   # Módulo B (gRPC Stats)
+└── 📁 proto/                          # Contratos gRPC
+```
+
+## Reprodução da Pesquisa
+### Pré-requisitos de Software
+- **Minikube** ≥ v1.31.2
+- **Kubernetes** ≥ v1.28.3  
+- **Docker** ≥ 24.0.6
+- **kubectl** (cliente Kubernetes)
+- **k6** (ferramenta de teste de carga)
+- **Node.js** 20.x LTS, **Python** ≥ 3.10, **Go** ≥ 1.22
+
+### Setup Completo da Pesquisa
+
+#### 1. Preparação do Cluster Multi-Node
 ```bash
-./scripts/run_all_local.sh
+# Criar cluster com 1 control-plane + 2 workers
+./scripts/setup_cluster.sh
+
+# Verificar nodes criados
+kubectl get nodes
 ```
 
-2. **Ou iniciar manualmente cada componente:**
+#### 2. Instalação do Stack de Observabilidade
 ```bash
-# Terminal 1: Service A (Python)
-cd service-a-python
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-python server.py
+# Instalar Prometheus + Grafana
+./scripts/setup_prometheus.sh
 
-# Terminal 2: Service B (Go)
-cd service-b-go
-go run server.go
-
-# Terminal 3: Gateway (Node.js)
-cd gateway-node
-npm install
-npm start
+# Verificar instalação
+kubectl get pods -n monitoring
 ```
 
-3. **Acessar a aplicação:**
-```
-http://localhost:8080
-```
-
-4. **Testes rápidos da API:**
+#### 3. Deploy da Aplicação de Pesquisa
 ```bash
-# Teste básico para verificar tudo funcionando
-./scripts/smoke_tests.sh
+# Build e load das imagens no Minikube
+./scripts/build_and_load_images.sh
 
-# Exemplos de chamadas individuais:
-curl http://localhost:8080/users/1
-curl http://localhost:8080/users
-curl -X POST http://localhost:8080/users/bulk -H 'Content-Type: application/json' -d '{"users":[{"id":"10","name":"Eva","age":22},{"id":"11","name":"Frank","age":35}]}'
-curl http://localhost:8080/scores/1
-```
+# Deploy completo dos serviços com métricas
+./scripts/deploy.sh
 
-### Execução com Kubernetes (Minikube)
-
-1. **Iniciar Minikube:**
-```bash
-minikube start
-```
-
-2. **Construir e carregar imagens Docker no Minikube:**
-```bash
-./scripts/build_local_images.sh
-```
-
-3. **Aplicar manifests Kubernetes:**
-```bash
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/service-a-deployment.yaml
-kubectl apply -f k8s/service-b-deployment.yaml
-kubectl apply -f k8s/gateway-deployment.yaml
-kubectl apply -f k8s/service-a-service.yaml
-kubectl apply -f k8s/service-b-service.yaml
-kubectl apply -f k8s/gateway-service.yaml
-```
-
-4. **Verificar estado dos pods:**
-```bash
+# Verificar pods rodando
 kubectl get pods,svc -n pspd-lab
 ```
 
-5. **Acessar a aplicação:**
+#### 4. Execução dos Cenários de Teste
+
 ```bash
-# Opção 1: Abrir automaticamente no navegador
-minikube service gateway -n pspd-lab
+# Terminal 1: Expor gateway localmente
+./scripts/expose_gateway.sh
+
+# Terminal 2: Executar cenários de teste
+./scripts/run_load_test.sh
+
+# Terminal 3: Monitorar HPA em tempo real
+watch -n 5 'kubectl get hpa -n pspd-lab'
 ```
 
-6. **Script de Deploy Completo:**
+#### 5. Acessar Dashboards de Monitoramento
+
 ```bash
-# Para fazer tudo de uma vez
-./scripts/deploy.sh
+# Prometheus (métricas)
+kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 9090:9090
+# Acesse: http://localhost:9090
+
+# Grafana (dashboards)  
+kubectl port-forward -n monitoring svc/prometheus-grafana 3000:80
+# Acesse: http://localhost:3000 (admin/admin)
 ```
-### 7. Requisitos de Software e Dependências
-Para garantir a replicação adequada do projeto, seguem as versões de software utilizadas durante o desenvolvimento e testes:
 
-**Versões de Software:**
+### Execução Local (Desenvolvimento)
+Para desenvolvimento e testes locais da aplicação base:
+```bash
+# Iniciar todos os serviços localmente
+./scripts/run_all_local.sh
 
-- **Minikube**: v1.31.2 ou superior (testado com driver Docker)
-- **Kubernetes**: v1.28.3 ou superior (versão que acompanha o Minikube)
-- **Docker**: 24.0.6 ou superior (para build de imagens locais)
-- **Node.js**: 20.x LTS (Gateway P)
-- **Python**: 3.10 ou superior (Serviço A)
-- **Go**: 1.22 ou superior (Serviço B)
+# Ou manualmente:
+# Terminal 1: Service A (Python)
+cd service-a-python && python server.py
+
+# Terminal 2: Service B (Go)  
+cd service-b-go && go run server.go
+
+# Terminal 3: Gateway (Node.js)
+cd gateway-node && npm start
+```
+
+**Acessar aplicação**: http://localhost:8080
+
+**Teste rápido**: `./scripts/smoke_tests.sh`
+
+## Documentação da Pesquisa
+
+### Arquivos Principais
+- **[`RELATORIO.md`](RELATORIO.md)**: Relatório completo da pesquisa
+- **[`docs/RESULTADOS_COMPARATIVOS.md`](docs/RESULTADOS_COMPARATIVOS.md)**: Análise detalhada dos cenários
+- **[`STATUS.md`](STATUS.md)**: Status atual e comandos úteis
+
+### Guias de Setup
+- **[`docs/CLUSTER_SETUP.md`](docs/CLUSTER_SETUP.md)**: Configuração do cluster
+- **[`docs/PROMETHEUS_SETUP.md`](docs/PROMETHEUS_SETUP.md)**: Setup de observabilidade  
+- **[`docs/LOAD_TESTING.md`](docs/LOAD_TESTING.md)**: Metodologia de testes
+
+### Scripts de Automação
+- **Setup**: `setup_cluster.sh`, `setup_prometheus.sh`
+- **Build/Deploy**: `build_and_load_images.sh`, `deploy.sh`
+- **Testes**: `run_load_test.sh`, `smoke_tests.sh`
+- **Monitoramento**: `expose_gateway.sh`
+
+## Principais Descobertas da Pesquisa
+
+### 🏆 Configuração Recomendada
+- **HPA Normal**: CPU 50%, Memory 70%
+- **Réplicas**: Min 2, Max 5
+- **Carga Sustentável**: 80-100 usuários simultâneos
+- **Throughput Esperado**: ~110 req/s
+
+### 📊 Resultados Comparativos
+
+| Cenário | Throughput | Latência P95 | Escalabilidade | Eficiência |
+|---------|------------|--------------|----------------|------------|
+| **Baseline (HPA)** | 111 req/s | **432ms** 🏆 | Dinâmica | **Alta** 🏆 |
+| Pré-escalado | 110 req/s | 484ms | Fixa | Baixa |
+| HPA Agressivo | 111 req/s | 482ms | Excessiva | Média |
+| **Stress Test** | **131 req/s** 🏆 | 2,210ms ⚠️ | Máxima | Degradada |
+
+### 🔍 Insights Principais
+1. **Autoscaling > Pré-escalamento**: HPA dinâmico superou réplicas fixas
+2. **Conservador > Agressivo**: HPA 50% CPU mais eficiente que 30%
+3. **Gateway = Gargalo**: Componente que mais escala (até 10 réplicas)
+4. **Sistema Resiliente**: 0% erros até 200 usuários simultâneos
+
+## Referências e Documentação
+
+### Tecnologias Utilizadas
+- **Kubernetes**: [kubernetes.io](https://kubernetes.io)
+- **Prometheus**: [prometheus.io](https://prometheus.io)
+- **Grafana**: [grafana.com](https://grafana.com)
+- **k6**: [k6.io](https://k6.io)
+- **gRPC**: [grpc.io](https://grpc.io)
+
+### Recursos do Projeto
+- **Repositório**: GitHub - PSPD-Projeto-De-Pesquisa
+- **Documentação**: Diretório [`docs/`](docs/)
+- **Scripts**: Diretório [`scripts/`](scripts/)
+- **Manifests K8s**: Diretório [`k8s/`](k8s/)
 
 
