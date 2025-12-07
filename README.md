@@ -183,7 +183,7 @@ cd gateway-node && npm start
 ## Documentação da Pesquisa
 
 ### Arquivo Principal
-- **[`RELATORIO.md`](RELATORIO.md)**: Relatório completo da pesquisa
+- **[`RELATORIO.md`](Relatorio.md)**: Relatório completo da pesquisa
 
 ### Scripts de Automação
 - **Setup**: `setup_cluster.sh`, `setup_prometheus.sh`
