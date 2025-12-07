@@ -13,9 +13,9 @@
 **Data:** 6 de Dezembro de 2025  
 
 **Integrantes do Grupo:**
-- [Artur Rodrigues Sousa Alves] - Matrícula: [211043637]
-- [Guilherme Soares Rocha] - Matrícula: [211039789]
-- [Pedro Augusto Dourado Izarias] - Matrícula: [200062620]
+- Artur Rodrigues Sousa Alves - Matrícula: 211043637
+- Guilherme Soares Rocha - Matrícula: 211039789
+- Pedro Augusto Dourado Izarias - Matrícula: 200062620
 
 ---
 
@@ -153,17 +153,17 @@ A análise principal de desempenho foi realizada através dos **resultados detal
 
 **Figura 1 e 2: Dashboard Node Exporter - Métricas dos Nós do Cluster**
 
-![Dashboard Node Exporter Grafana](Assets/grafana1.png)
+![Dashboard Node Exporter Grafana](https://raw.githubusercontent.com/ArturRSA19/PSPD-Projeto-De-Pesquisa/main/Assets/grafana1.png)
 
 *Dashboard Node Exporter do Grafana mostrando métricas de CPU, memória e rede de um dos nós do cluster Kubernetes*
 
-![Dashboard Grafana Adicional](Assets/grafana2.png)
+![Dashboard Grafana Adicional](https://raw.githubusercontent.com/ArturRSA19/PSPD-Projeto-De-Pesquisa/main/Assets/grafana2.png)
 
 *Dashboard do Grafana com demais métricas adicionais*
 
 **Figura 3: Prometheus - Evolução das Réplicas do HPA**
 
-![Dashboard Grafana Adicional](Assets/prometheus.png)
+![Dashboard Prometheus](https://raw.githubusercontent.com/ArturRSA19/PSPD-Projeto-De-Pesquisa/main/Assets/prometheus.png)
 
 *Dashboard do Prometheus*
 
